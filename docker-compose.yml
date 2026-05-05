@@ -1,0 +1,35 @@
+services:
+  config-server:
+    image: maven:3.9.14-eclipse-temurin-17
+    container_name: config-server
+    working_dir: /workspace
+    command: mvn spring-boot:run -Dspring-boot.run.profiles=native
+    ports:
+      - "8888:8888"
+    environment:
+      SERVER_PORT: 8888
+      SPRING_PROFILES_ACTIVE: native
+    volumes:
+      - ./:/workspace
+      - m2-cache:/root/.m2
+    restart: unless-stopped
+
+  discovery-server:
+    build:
+      context: .
+      dockerfile: dockerfile
+    image: discovery-server:latest
+    container_name: discovery-server
+    ports:
+      - "8761:8761"
+    depends_on:
+      - config-server
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8761/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+volumes:
+  m2-cache:
