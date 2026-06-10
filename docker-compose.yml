@@ -9,8 +9,10 @@ services:
     ports:
       - "8761:8761"
     restart: unless-stopped
+    environment:
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://host.docker.internal:8888
     healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:8761/actuator/health || exit 1" ]
+      test: [ "CMD-SHELL", "curl -f -u admin:admin123 http://localhost:8761/actuator/health || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 5
