@@ -1,5 +1,4 @@
 services:
-
   discovery-server:
     build:
       context: .
@@ -9,11 +8,23 @@ services:
     ports:
       - "8761:8761"
     restart: unless-stopped
+
+    networks:
+      - ticketti-network
+    environment:
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
     healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:8761/actuator/health || exit 1" ]
-      interval: 30s
+      test:
+        ["CMD-SHELL", "curl -f http://localhost:8761/actuator/health || exit 1"]
+      interval: 15s
       timeout: 10s
       retries: 5
-      start_period: 30s
+      start_period: 35s
+
 volumes:
   m2-cache:
+
+networks:
+  ticketti-network:
+    external: true
+    name: ticketti-network
