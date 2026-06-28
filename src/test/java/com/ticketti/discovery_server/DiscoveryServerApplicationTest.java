@@ -49,7 +49,7 @@ class DiscoveryServerApplicationTest {
 			Method metodoMain = DiscoveryServerApplication.class.getMethod("main", String[].class);
 
 			    // Then - Verifica que el metodo existe y tiene la firma correcta por reflection
-			    assertThatCode(() -> metodoMain.invoke(null, (Object) new String[0]))
+			    assertThatCode(() -> metodoMain.invoke(null, (Object) new String[]{"--server.port=0"}))
 				    .as("La invocacion por reflection del metodo main deberia ser posible")
 				    .doesNotThrowAnyException();
 		}
