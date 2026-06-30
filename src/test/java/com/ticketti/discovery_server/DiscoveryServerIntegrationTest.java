@@ -1,11 +1,9 @@
 package com.ticketti.discovery_server;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.core.env.Environment;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -17,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(
     webEnvironment = WebEnvironment.RANDOM_PORT,
     properties = {
-        "spring.cloud.config.enabled=false", // Evita timeouts conectando al config server
+        "spring.cloud.config.enabled=false",
         "eureka.client.register-with-eureka=false",
         "eureka.client.fetch-registry=false"
     }
@@ -27,41 +25,40 @@ class DiscoveryServerIntegrationTest {
     @LocalServerPort
     private int port;
 
-    @Autowired
-    private Environment environment;
+    private final HttpClient client = HttpClient.newHttpClient();
 
     @Test
-    void contextoCarga() {
-        assertThat(environment).isNotNull();
-        assertThat(port).isGreaterThan(0);
-    }
-
-    @Test
-    void eurekaDashboardLoads() throws Exception {
-        HttpClient client = HttpClient.newHttpClient();
+    void eurekaDashboard_cargaYContieneSystemStatus() throws Exception {
         HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create("http://localhost:" + port + "/"))
             .GET()
             .build();
-
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         assertThat(response.statusCode()).isEqualTo(200);
-        assertThat(response.body())
-            .as("El dashboard de Eureka debe contener el estado del sistema")
-            .contains("System Status");
+        assertThat(response.body()).contains("System Status");
     }
 
     @Test
-    void eurekaAppsEndpointReturnsOk() throws Exception {
-        HttpClient client = HttpClient.newHttpClient();
+    void eurekaAppsEndpoint_retorna200() throws Exception {
         HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create("http://localhost:" + port + "/eureka/apps"))
             .GET()
             .build();
-
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         assertThat(response.statusCode()).isIn(200, 204);
+    }
+
+    @Test
+    void paginaInicial_contieneDSReplicas() throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create("http://localhost:" + port + "/"))
+            .GET()
+            .build();
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        assertThat(response.statusCode()).isEqualTo(200);
+        assertThat(response.body()).contains("DS Replicas");
     }
 }
